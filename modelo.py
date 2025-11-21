@@ -16,13 +16,18 @@ import csv
 import torch
 import gc
 from transformers import pipeline
+from functools import lru_cache
 
 # CARGAR MODELO PRE-ENTRENADO
 # Auto-selección de dispositivo: GPU si existe, de lo contrario CPU
-_device = 0 if (hasattr(torch, "cuda") and torch.cuda.is_available()) else -1
-nlp = pipeline("zero-shot-classification",
-                      model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli",device=_device)
-
+@lru_cache(maxsize=1)
+def get_nlp():
+    _device = 0 if (hasattr(torch, "cuda") and torch.cuda.is_available()) else -1
+    return pipeline(
+        "zero-shot-classification",
+        model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli",
+        device=_device
+    )
 # FUNCION PARA NORMALIZAR TEXTO
 
 def normalizar(texto):
@@ -751,7 +756,7 @@ def pipeline_categorias(carpeta, nlp, nombre, file_name,umbral,data_modulo,clave
 """
 
 def Procesa_CATS(data_prueba, carpeta, clave, umbral=0.25):
-
+  nlp = get_nlp() 
   if clave == "SI":
 
     ###############################################################################
